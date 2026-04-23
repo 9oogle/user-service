@@ -28,7 +28,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 eureka:
   instance:
-    prefer-ip-address : false
+    prefer-ip-address: false
     hostname: ${HOSTNAME:localhost}
   client:
     register-with-eureka: true
