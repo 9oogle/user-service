@@ -14,7 +14,7 @@ public class Password {
     @Column(nullable = false)
     private String password;
 
-    public static Password of(String rawPassword, PasswordEncoder encoder){
+    public static Password fromRaw(String rawPassword, PasswordEncoder encoder){
         validate(rawPassword);
         return new Password(encoder.encode(rawPassword));
     }
