@@ -10,13 +10,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Experience {
     @Column(length = 20)
-    String job;
+    private String job;
 
     @Column(length = 100)
-    String education;
+    private String education;
 
     @Column(length = 50)
-    String major;
+    private String major;
 
     private Experience(String job, String education, String major){
         this.job = job;
