@@ -14,7 +14,7 @@ public class Name {
     private String name;
 
     private Name(String name){
-
+        validate(name);
         this.name = name;
     }
 
