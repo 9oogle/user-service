@@ -1,6 +1,6 @@
 package com.goggles.user_service.domain.entity;
 
-import com.goggles.user_service.domain.exception.InvaliNickNameException;
+import com.goggles.user_service.domain.exception.InvalidNickNameException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
@@ -14,7 +14,7 @@ public class NickName {
     private String nickName;
 
     private NickName(String nickName){
-
+        validate(nickName);
         this.nickName = nickName;
     }
 
@@ -24,15 +24,15 @@ public class NickName {
 
     private void validate(String nickName){
         if (nickName == null || nickName.isBlank()) {
-            throw new InvaliNickNameException(nickName);
+            throw new InvalidNickNameException(nickName);
         }
 
         if (nickName.length() < 2 || nickName.length() > 15) {
-            throw new InvaliNickNameException(nickName);
+            throw new InvalidNickNameException(nickName);
         }
 
         if (!nickName.matches("^[a-zA-Z0-9가-힣]+$")) {
-            throw new InvaliNickNameException(nickName);
+            throw new InvalidNickNameException(nickName);
         }
     }
 }
