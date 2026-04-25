@@ -3,6 +3,8 @@ package com.goggles.user_service.domain.entity;
 import com.goggles.user_service.domain.exception.InvalidBankAccountException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class BankAccount {
 
     @Column(name = "bank_name", nullable = false)
+    @Enumerated(EnumType.STRING)
     private Bank bankName;
 
     @Column(name = "account_number", nullable = false)
