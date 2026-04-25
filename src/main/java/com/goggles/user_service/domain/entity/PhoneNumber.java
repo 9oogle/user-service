@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public class PhoneNumber {
 
     @Column(name ="phone_number", nullable = false, unique = true)
-    String phoneNumber;
+    private String phoneNumber;
 
     private PhoneNumber(String phoneNumber){
         validate(phoneNumber);
