@@ -47,7 +47,7 @@ public class BankAccount {
         if (!digitsOnly.matches("^\\d{10,20}$")) {
             throw new InvalidBankAccountException(accountNumber);
         }
-        if (accountHolder == null || !accountHolder.matches("^[가-힣]{2,5}$")) {
+        if (accountHolder == null || !accountHolder.matches("^[a-zA-Z가-힣]+$")) {
             throw new InvalidBankAccountException(accountHolder);
         }
     }
