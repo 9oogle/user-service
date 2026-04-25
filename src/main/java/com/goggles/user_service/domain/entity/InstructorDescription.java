@@ -10,16 +10,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InstructorDescription {
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String bio;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000)
     private String career;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String portfolio;
 
     private InstructorDescription(String bio, String career, String portfolio){
+        validate(bio, career, portfolio);
         this.bio = bio;
         this.career = career;
         this.portfolio = portfolio;
