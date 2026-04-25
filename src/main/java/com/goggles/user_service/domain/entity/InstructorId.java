@@ -21,6 +21,9 @@ public class InstructorId {
     }
 
     public static InstructorId of(UUID instructorId){
+        if (instructorId == null) {
+            throw new InvalidInstructorIdException(null);
+        }
         return new InstructorId(instructorId.toString());
     }
 
