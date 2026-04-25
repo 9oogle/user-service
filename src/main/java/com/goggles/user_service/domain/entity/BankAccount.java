@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public class BankAccount {
 
     @Column(name = "bank_name", nullable = false)
-    private String bankName;
+    private Bank bankName;
 
     @Column(name = "account_number", nullable = false)
     private String accountNumber;
@@ -19,19 +19,29 @@ public class BankAccount {
     @Column(name = "account_holder", nullable = false)
     private String accountHolder;
 
-    private BankAccount(String bankName, String accountNumber, String accountHolder){
-        validate(accountNumber, accountHolder);
+    private BankAccount(Bank bankName, String accountNumber, String accountHolder){
+        validate(bankName, accountNumber, accountHolder);
         this.bankName = bankName;
         this.accountNumber = accountNumber;
         this.accountHolder = accountHolder;
     }
 
-    public static BankAccount of(String bankName, String accountNumber, String accountHolder){
+    public static BankAccount of(Bank bankName, String accountNumber, String accountHolder){
         return new BankAccount(bankName, accountNumber, accountHolder);
     }
 
-    private void validate(String accountNumber, String accountHolder){
-        if (accountNumber == null || !accountNumber.matches("^[0-9\\-]{10,20}$")) {
+    private void validate(Bank bankName, String accountNumber, String accountHolder){
+        if(bankName == null){
+            throw new InvalidBankAccountException("bankName");
+        }
+
+        if (accountNumber == null || !accountNumber.matches("^[0-9-]{10,20}$")) {
+            throw new InvalidBankAccountException("accountNumber");
+        }
+
+        String digitsOnly = accountNumber.replace("-", "");
+
+        if (!digitsOnly.matches("^\\d{10,20}$")) {
             throw new InvalidBankAccountException(accountNumber);
         }
         if (accountHolder == null || !accountHolder.matches("^[가-힣]{2,5}$")) {
