@@ -1,5 +1,6 @@
 package com.goggles.user_service.domain.entity;
 
+import com.goggles.user_service.domain.exception.InvalidInstructorIdException;
 import com.goggles.user_service.domain.exception.InvalidUserIdException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -20,6 +21,9 @@ public class UserId {
     }
 
     public static UserId of(UUID userId){
+        if (userId == null) {
+            throw new InvalidInstructorIdException(null);
+        }
         return new UserId(userId.toString());
     }
 
