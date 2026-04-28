@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InstructorDescription {
 
+    @Column(nullable = false, length = 20)
+    private String field;
+
     @Column(nullable = false, length = 500)
     private String bio;
 
@@ -19,18 +22,22 @@ public class InstructorDescription {
     @Column(nullable = false, length = 500)
     private String portfolio;
 
-    private InstructorDescription(String bio, String career, String portfolio){
-        validate(bio, career, portfolio);
+    private InstructorDescription(String field, String bio, String career, String portfolio){
+        validate(field, bio, career, portfolio);
+        this.field = field;
         this.bio = bio;
         this.career = career;
         this.portfolio = portfolio;
     }
 
-    public static InstructorDescription of(String bio, String career, String portfolio){
-        return new InstructorDescription(bio, career, portfolio);
+    public static InstructorDescription of(String field, String bio, String career, String portfolio){
+        return new InstructorDescription(field, bio, career, portfolio);
     }
 
-    private void validate(String bio, String career, String portfolio){
+    private void validate(String field, String bio, String career, String portfolio){
+        if (field == null || field.isBlank()) {
+            throw new InvalidInstructorDescriptionException("field");
+        }
         if (bio == null || bio.isBlank()) {
             throw new InvalidInstructorDescriptionException("bio");
         }
