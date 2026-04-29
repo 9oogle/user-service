@@ -1,4 +1,4 @@
-package com.goggles.user_service.domain.exception;
+package com.goggles.user_service.instructor.domain.exception;
 
 import com.goggles.common.exception.ForbiddenException;
 

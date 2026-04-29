@@ -1,6 +1,6 @@
-package com.goggles.user_service.domain.entity;
+package com.goggles.user_service.instructor.domain.entity;
 
-import com.goggles.user_service.domain.exception.InvalidInstructorDescriptionException;
+import com.goggles.user_service.instructor.domain.exception.InvalidInstructorDescriptionException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;

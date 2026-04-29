@@ -1,6 +1,7 @@
-package com.goggles.user_service.domain.entity;
+package com.goggles.user_service.instructor.domain.entity;
 
 import com.goggles.common.domain.BaseTime;
+import com.goggles.user_service.domain.entity.UserId;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
