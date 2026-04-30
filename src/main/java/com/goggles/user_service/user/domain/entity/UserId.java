@@ -1,13 +1,17 @@
-package com.goggles.user_service.domain.entity;
+package com.goggles.user_service.user.domain.entity;
 
-import com.goggles.user_service.domain.exception.InvalidUserIdException;
+import com.goggles.user_service.user.domain.exception.InvalidUserIdException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.UUID;
 
+@Getter
+@ToString
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserId {
@@ -19,15 +23,11 @@ public class UserId {
         this.userId = userId;
     }
 
-    public static UserId of(UUID userId){
-        if (userId == null) {
+    public static UserId of(UUID keycloakId){
+        if (keycloakId == null) {
             throw new InvalidUserIdException(null);
         }
-        return new UserId(userId.toString());
-    }
-
-    public static UserId generate(){
-        return new UserId(UUID.randomUUID().toString());
+        return new UserId(keycloakId.toString());
     }
 
     private void validate(String userId){

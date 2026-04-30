@@ -1,11 +1,15 @@
-package com.goggles.user_service.domain.entity;
+package com.goggles.user_service.user.domain.entity;
 
-import com.goggles.user_service.domain.exception.InvalidNameException;
+import com.goggles.user_service.user.domain.exception.InvalidNameException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
+@Getter
+@ToString
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Name {
