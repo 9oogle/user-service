@@ -104,13 +104,14 @@ public class User extends BaseTime {
     }
 
     public void changeRole(Role role, RoleCheck roleCheck){
+        checkMasterOnly(roleCheck);
+
         if(role == null){
             throw new BadRequestException("user.validation.role.required");
         }
         if(this.role == role){
             return;
         }
-        checkMasterOnly(roleCheck);
 
         this.role = role;
         //todo 상태변경 갱신 이벤트 발행 구현
@@ -119,15 +120,16 @@ public class User extends BaseTime {
     public void changeBasicInfo(String name, String nickName, LocalDate birthDate,
                                 RoleCheck roleCheck) {
         checkMine(roleCheck);
+        validateBasicInfo(this.gender, birthDate);
         Name newName = Name.of(name);
         NickName newNickName = NickName.of(nickName);
 
-        if (!this.name.equals(newName)) {
-            this.name = newName;
+        if (this.name.equals(newName) && this.nickName.equals(newNickName) && this.birthDate.equals(birthDate)) {
+            return;
         }
-        if (!this.nickName.equals(newNickName)) {
-            this.nickName = newNickName;
-        }
+        this.name = newName;
+        this.nickName = newNickName;
+        this.birthDate = birthDate;
         //todo 상태변경 갱신 이벤트 발행 구현
     }
 
@@ -141,10 +143,10 @@ public class User extends BaseTime {
     }
 
     public void changeConsent(boolean marketing, boolean email, RoleCheck roleCheck){
+        checkMine(roleCheck);
         if(marketing == this.consent.isMarketing() && email == this.consent.isEmail()){
             return;
         }
-        checkMine(roleCheck);
 
         this.consent = Consent.of(consent.isPersonal(), marketing, email);
     }
