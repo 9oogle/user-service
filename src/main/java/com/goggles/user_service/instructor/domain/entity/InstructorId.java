@@ -3,11 +3,12 @@ package com.goggles.user_service.instructor.domain.entity;
 import com.goggles.user_service.instructor.domain.exception.InvalidInstructorIdException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.UUID;
-
+@Getter
+@ToString
+@EqualsAndHashCode
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InstructorId {

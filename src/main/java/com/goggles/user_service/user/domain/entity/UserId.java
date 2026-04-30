@@ -3,16 +3,14 @@ package com.goggles.user_service.user.domain.entity;
 import com.goggles.user_service.user.domain.exception.InvalidUserIdException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.UUID;
 
 @Getter
 @ToString
 @Embeddable
+@EqualsAndHashCode
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserId {
     @Column(name = "user_id", nullable = false, updatable = false)

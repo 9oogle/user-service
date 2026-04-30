@@ -19,6 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseTime {
 
+    @Transient
     private final long MIN_AGE = 14;
 
     @EmbeddedId
