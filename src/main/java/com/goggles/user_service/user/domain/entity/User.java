@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Getter
-@ToString
 @Entity
 @Table(name = "P_USERS")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -76,6 +75,7 @@ public class User extends BaseTime {
             List<String> educations,
             List<String> majors
             ) {
+        validateBasicInfo(gender, birthDate);
         this.id = UserId.of(keycloakId);
         this.email = Email.of(email);
         this.name = Name.of(name);
@@ -89,21 +89,24 @@ public class User extends BaseTime {
         this.profile = Profile.of(interests,jobs, educations, majors);
     }
 
-    private void validateBasicInfo(){
-        if(this.gender == null){
+    private void validateBasicInfo(Gender gender, LocalDate birthDate){
+        if(gender == null){
             throw new BadRequestException("user.validation.gender.required");
         }
 
-        if(this.birthDate == null){
+        if(birthDate == null){
             throw new BadRequestException("user.validation.birthdate.required");
         }
 
-        if(ChronoUnit.YEARS.between(this.birthDate, LocalDate.now())< MIN_AGE){
+        if(ChronoUnit.YEARS.between(birthDate, LocalDate.now())< MIN_AGE){
             throw new BadRequestException("user.validation.birthdate.invalid");
         }
     }
 
     public void changeRole(Role role, RoleCheck roleCheck){
+        if(role == null){
+            throw new BadRequestException("user.validation.role.required");
+        }
         if(this.role == role){
             return;
         }
@@ -115,28 +118,26 @@ public class User extends BaseTime {
 
     public void changeBasicInfo(String name, String nickName, LocalDate birthDate,
                                 RoleCheck roleCheck) {
-
-        if (name.equals(this.name.getName()) && nickName.equals(this.nickName.getNickName())
-                && birthDate.equals(this.birthDate)) {
-            return;
-        }
-
         checkMine(roleCheck);
+        Name newName = Name.of(name);
+        NickName newNickName = NickName.of(nickName);
 
-        this.name = Name.of(name);
-        this.nickName = NickName.of(nickName);
-        this.birthDate = birthDate;
+        if (!this.name.equals(newName)) {
+            this.name = newName;
+        }
+        if (!this.nickName.equals(newNickName)) {
+            this.nickName = newNickName;
+        }
         //todo 상태변경 갱신 이벤트 발행 구현
     }
 
     public void changePhoneNumber(String phoneNumber, RoleCheck roleCheck){
-        if(phoneNumber.equals(this.phoneNumber.getPhoneNumber())){
-            return;
-        }
-
         checkMine(roleCheck);
+        PhoneNumber newPhoneNumber = PhoneNumber.of(phoneNumber);
 
-        this.phoneNumber = PhoneNumber.of(phoneNumber);
+        if(!this.phoneNumber.equals(newPhoneNumber)){
+            this.phoneNumber = newPhoneNumber;
+        }
     }
 
     public void changeConsent(boolean marketing, boolean email, RoleCheck roleCheck){
