@@ -3,15 +3,12 @@ package com.goggles.user_service.user.domain.entity;
 import com.goggles.user_service.user.domain.exception.InvalidPhoneNumberException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.regex.Pattern;
 
 @Getter
-@ToString
+@EqualsAndHashCode
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PhoneNumber {
