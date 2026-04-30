@@ -4,8 +4,12 @@ import com.goggles.user_service.instructor.domain.exception.InvalidInstructorDes
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
+@Getter
+@ToString
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InstructorDescription {

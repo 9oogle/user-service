@@ -1,13 +1,19 @@
 package com.goggles.user_service.instructor.domain.entity;
 
 import com.goggles.common.domain.BaseTime;
-import com.goggles.user_service.domain.entity.UserId;
+import com.goggles.common.exception.BadRequestException;
+import com.goggles.common.exception.ForbiddenException;
+import com.goggles.user_service.user.domain.entity.Role;
+import com.goggles.user_service.user.domain.entity.UserId;
+import com.goggles.user_service.common.domain.service.RoleCheck;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
+@Getter
+@ToString
 @Entity
 @Table(name = "P_INSTRUCTORS")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -25,37 +31,63 @@ public class Instructor extends BaseTime {
     @Embedded
     private BankAccount bankAccount;
 
-
     @Embedded
     private InstructorDescription instructorDescription;
 
     @Column
     private LocalDateTime approvedAt;
 
-    public static Instructor create(
-            UserId userId,
-            InstructorDescription instructorDescription
+    @Builder
+    public Instructor (
+            UUID userId,
+            String field, String bio, String career, String portfolio
     ) {
-        Instructor instructor = new Instructor();
-        instructor.id = InstructorId.generate();
-        instructor.userId = userId;
-        instructor.instructorDescription = instructorDescription;
-        instructor.status = InstructorStatus.REQUESTED;
-        return instructor;
+        this.userId = UserId.of(userId);
+        this.id = InstructorId.generate();
+        this.status = InstructorStatus.REQUESTED;
+        this.instructorDescription = InstructorDescription.of(field,bio,career,portfolio);
     }
 
-    public void approve() {
+    public void approve(RoleCheck roleCheck) {
+        checkMasterOnly(roleCheck);
         if (this.status != InstructorStatus.REQUESTED) {
-            throw new IllegalStateException("승인 불가 상태");
+            throw new BadRequestException("instructor.exception.approve.invalid");
         }
         this.status = InstructorStatus.APPROVED;
         this.approvedAt = LocalDateTime.now();
     }
 
-    public void reject() {
+    public void reject(RoleCheck roleCheck) {
+        checkMasterOnly(roleCheck);
         if (this.status != InstructorStatus.REQUESTED) {
-            throw new IllegalStateException("거절 불가 상태");
+            throw new BadRequestException("instructor.exception.reject.invalid");
         }
         this.status = InstructorStatus.REJECTED;
+    }
+
+    public void registerBankAccount(Bank bankName, String accountNumber,
+                                    String accountHolder, RoleCheck roleCheck) {
+        checkMasterOnly(roleCheck);
+        this.bankAccount = BankAccount.of(bankName, accountNumber, accountHolder);
+    }
+
+    public void changeInstructorDescription(String filed, String bio, String career, String portfolio,
+                                            RoleCheck roleCheck){
+        checkMasterOnly(roleCheck);
+
+        if(this.instructorDescription.getField().equals(filed)
+        && this.instructorDescription.getBio().equals(bio)
+        && this.instructorDescription.getCareer().equals(career)
+        && this.instructorDescription.getPortfolio().equals(portfolio)){
+            return;
+        }
+
+        this.instructorDescription = InstructorDescription.of(filed, bio, career, portfolio);
+    }
+
+    private void checkMasterOnly(RoleCheck roleCheck) {
+        if (!roleCheck.hasRole(Role.MASTER)) {
+            throw new ForbiddenException("instructor.exception.master.forbidden");
+        }
     }
 }
