@@ -11,18 +11,21 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
-@ToString
+@ToString(onlyExplicitlyIncluded = true)
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BankAccount {
 
+    @ToString.Include
     @Column(name = "bank_name", nullable = false)
     @Enumerated(EnumType.STRING)
     private Bank bankName;
 
+    @ToString.Exclude
     @Column(name = "account_number", nullable = false)
     private String accountNumber;
 
+    @ToString.Exclude
     @Column(name = "account_holder", nullable = false)
     private String accountHolder;
 
