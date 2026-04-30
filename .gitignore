@@ -34,3 +34,5 @@ application-prod.yaml
 # Compiled
 out/
 target/
+
+src/main/generated
