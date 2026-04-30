@@ -3,8 +3,7 @@ package com.goggles.user_service.user.domain.entity;
 import com.goggles.common.domain.BaseTime;
 import com.goggles.common.exception.BadRequestException;
 import com.goggles.common.exception.ForbiddenException;
-import com.goggles.user_service.user.domain.exception.UserDeletedException;
-import com.goggles.user_service.user.domain.service.RoleCheck;
+import com.goggles.user_service.common.domain.service.RoleCheck;
 import jakarta.persistence.*;
 import lombok.*;
 

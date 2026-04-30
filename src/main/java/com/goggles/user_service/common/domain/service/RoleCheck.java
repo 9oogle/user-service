@@ -1,4 +1,4 @@
-package com.goggles.user_service.user.domain.service;
+package com.goggles.user_service.common.domain.service;
 
 import com.goggles.user_service.user.domain.entity.Role;
 
