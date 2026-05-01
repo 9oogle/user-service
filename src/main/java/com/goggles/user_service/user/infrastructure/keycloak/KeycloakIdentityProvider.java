@@ -1,6 +1,5 @@
 package com.goggles.user_service.user.infrastructure.keycloak;
 
-import com.goggles.common.exception.NotFoundException;
 import com.goggles.user_service.user.domain.exception.DuplicateUserException;
 import com.goggles.user_service.user.domain.exception.IdentityProviderException;
 import com.goggles.user_service.user.domain.exception.UserNotFoundException;
@@ -8,9 +7,7 @@ import com.goggles.user_service.user.domain.service.IdentityProvider;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.http.HttpStatus;
@@ -63,6 +60,7 @@ public class KeycloakIdentityProvider implements IdentityProvider {
             realmResource.users().get(id.toString()).remove();
         } catch (Exception e) {
             log.error("keycloak 회원 삭제 실패 - ID: {}, 사유: {}", id, e.getMessage(), e);
+            throw new IdentityProviderException("user.deletion.failed");
         }
     }
 
@@ -71,7 +69,7 @@ public class KeycloakIdentityProvider implements IdentityProvider {
         try {
             CredentialRepresentation credential = getCredential(newPassword);
             realmResource.users().get(userId.toString()).resetPassword(credential);
-        } catch (NotFoundException e) {
+        } catch (jakarta.ws.rs.NotFoundException e) {
             log.error("keycloak에서 사용자를 찾을 수 없음 - ID: {}, 사유: {}", userId, e.getMessage(), e);
             throw new UserNotFoundException("user.notfound");
         } catch (Exception e) {
