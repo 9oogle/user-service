@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Getter
 @Entity
-@Table(name = "P_INSTRUCTORS")
+@Table(name = "P_INSTRUCTOR")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Instructor extends BaseTime {
 
