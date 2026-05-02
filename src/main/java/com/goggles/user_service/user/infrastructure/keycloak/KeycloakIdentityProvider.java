@@ -51,6 +51,9 @@ public class KeycloakIdentityProvider implements IdentityProvider {
             String userId = response.getLocation().getPath()
                     .replaceAll(".*/([^/]+)$", "$1");
             return UUID.fromString(userId);
+        } catch (Exception e) {
+            log.error("keycloak 유저 생성 실패", e);
+            throw new IdentityProviderException("user.registration.failed");
         }
     }
 
