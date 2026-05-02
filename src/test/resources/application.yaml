@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: user-service
+
+  profiles:
+    active: dev
+
+  config:
+    import:
+      - "optional:file:.env[.properties]"
+
+  # Config 서버 비활성화
+  cloud:
+    config:
+      enabled: false
+      discovery:
+        enabled: false
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:9013}/${DB_NAME:goggles}
+    username: ${DB_USERNAME:user}
+    password: ${DB_PASSWORD:1234}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: "http://localhost:9090/realms/goggles/protocol/openid-connect/certs"
+          issuer-uri: "http://localhost:9090/realms/goggles"
+
+keycloak:
+  server-url: "http://localhost:9090"
+  realm: goggles
+  client-id: user-service
+  client-secret: ${KEYCLOAK_CLIENT_SECRET}
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD}
+
+# Eureka 비활성화
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+server:
+  port: 9010
