@@ -22,12 +22,12 @@ public class JpaUserRepository implements UserRepository {
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return repository.findByEmail(email);
+        return repository.findByEmail_Email(email);
     }
 
     @Override
     public boolean existsByEmail(String email) {
-        return repository.existsByEmail(email);
+        return repository.existsByEmail_Email(email);
     }
 
     @Override
@@ -37,6 +37,6 @@ public class JpaUserRepository implements UserRepository {
 
     @Override
     public boolean existsByNickName(String nickName) {
-        return repository.existsByNickName(nickName);
+        return repository.existsByNickName_NickName(nickName);
     }
 }
