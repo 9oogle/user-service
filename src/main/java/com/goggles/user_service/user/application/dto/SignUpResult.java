@@ -1,16 +1,15 @@
 package com.goggles.user_service.user.application.dto;
 
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
 public class SignUpResult {
-    private UUID userId;
+  private UUID userId;
 
-    public static SignUpResult from(UUID keycloakId) {
-        return new SignUpResult(keycloakId);
-    }
+  public static SignUpResult from(UUID keycloakId) {
+    return new SignUpResult(keycloakId);
+  }
 }
