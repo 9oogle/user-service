@@ -56,19 +56,19 @@ public class KeycloakIdentityProvider implements IdentityProvider {
                     }
             );
             Map<String, Object> body = response.getBody();
-            if (body != null) {
+            if (body == null || body.get("access_token") == null || body.get("refresh_token") == null) {
+                throw new IdentityProviderException("user.login.token.missing");
+            }
                 return new TokenResult(
                         (String) body.get("access_token"),
                         (String) body.get("refresh_token")
                 );
-            }
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 throw new InvalidCredentialsException();
             }
             throw new IdentityProviderException("로그인 실패: " + e.getMessage());
         }
-        return null;
     }
 
     private HttpHeaders headers() {
@@ -88,23 +88,27 @@ public class KeycloakIdentityProvider implements IdentityProvider {
         CredentialRepresentation credential = getCredential(password);
         user.setCredentials(List.of(credential));
 
-        try(Response response = realmResource.users().create(user)){
-            if(response.getStatus() == HttpStatus.CONFLICT.value()){
+        try (Response response = realmResource.users().create(user)) {
+            int status = response.getStatus();
+
+            if (status == HttpStatus.CONFLICT.value()) {
                 throw new DuplicateUserException("이미 가입된 이메일입니다.");
             }
-
-            if(response.getStatus() != HttpStatus.CREATED.value()){
-                log.error("Keycloak 유저 생성 실패 - status: {}", response.getStatus());
+            if (status != HttpStatus.CREATED.value()) {
+                log.error("Keycloak 유저 생성 실패 - status: {}", status);
                 throw new IdentityProviderException("user.registration.failed");
             }
-
             if (response.getLocation() == null) {
                 log.error("Keycloak 응답 헤더에 Location 누락");
                 throw new IdentityProviderException("user.registration.userId.missing");
             }
+
             String userId = response.getLocation().getPath()
                     .replaceAll(".*/([^/]+)$", "$1");
             return UUID.fromString(userId);
+
+        } catch (DuplicateUserException | IdentityProviderException e) {
+            throw e; // 의도된 예외는 그대로 올림
         } catch (Exception e) {
             log.error("keycloak 유저 생성 실패", e);
             throw new IdentityProviderException("user.registration.failed");
