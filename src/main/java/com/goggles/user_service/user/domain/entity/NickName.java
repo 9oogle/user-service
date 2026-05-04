@@ -14,29 +14,29 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NickName {
 
-    @Column(name = "nick_name", nullable = false, unique = true)
-    private String nickName;
+  @Column(name = "nick_name", nullable = false, unique = true)
+  private String nickName;
 
-    private NickName(String nickName){
-        validate(nickName);
-        this.nickName = nickName;
+  private NickName(String nickName) {
+    validate(nickName);
+    this.nickName = nickName;
+  }
+
+  public static NickName of(String nickName) {
+    return new NickName(nickName);
+  }
+
+  private void validate(String nickName) {
+    if (nickName == null || nickName.isBlank()) {
+      throw new InvalidNickNameException(nickName);
     }
 
-    public static NickName of(String nickName){
-        return new NickName(nickName);
+    if (nickName.length() < 2 || nickName.length() > 15) {
+      throw new InvalidNickNameException(nickName);
     }
 
-    private void validate(String nickName){
-        if (nickName == null || nickName.isBlank()) {
-            throw new InvalidNickNameException(nickName);
-        }
-
-        if (nickName.length() < 2 || nickName.length() > 15) {
-            throw new InvalidNickNameException(nickName);
-        }
-
-        if (!nickName.matches("^[a-zA-Z0-9가-힣]+$")) {
-            throw new InvalidNickNameException(nickName);
-        }
+    if (!nickName.matches("^[a-zA-Z0-9가-힣]+$")) {
+      throw new InvalidNickNameException(nickName);
     }
+  }
 }

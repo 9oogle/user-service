@@ -18,14 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/users")
 public class UserController {
 
-    private final UserService userService;
+  private final UserService userService;
 
-    @PostMapping
-    public ResponseEntity<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
+  @PostMapping
+  public ResponseEntity<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
 
-        SignUpResult response = userService.create(request.toServiceRequest());
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(SignUpResponse.from(response));
-    }
+    SignUpResult response = userService.create(request.toServiceRequest());
+    return ResponseEntity.status(HttpStatus.CREATED).body(SignUpResponse.from(response));
+  }
 }

@@ -8,46 +8,47 @@ import com.goggles.user_service.user.domain.exception.DuplicateUserException;
 import com.goggles.user_service.user.domain.exception.UserNotFoundException;
 import com.goggles.user_service.user.domain.repository.UserRepository;
 import com.goggles.user_service.user.domain.service.IdentityProvider;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final IdentityProvider identityProvider;
+  private final UserRepository userRepository;
+  private final IdentityProvider identityProvider;
 
-    @Transactional
-    public SignUpResult create(SignUpCommand request){
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateUserException("이미 가입된 이메일입니다.");
-        }
-        if (userRepository.existsByNickName(request.getNickName())) {
-            throw new DuplicateUserException("이미 사용중인 닉네임입니다.");
-        }
-
-        UUID keycloakId = identityProvider.createUser(request.getEmail(), request.getPassword());
-
-        try{
-            User user = request.toUser(keycloakId);
-            userRepository.save(user);
-            return SignUpResult.from(keycloakId);
-        } catch (Exception e){
-            log.error("DB 저장 실패로 Keycloak 유저 롤백 - keycloakId: {}", keycloakId);
-            identityProvider.deleteUser(keycloakId);
-            throw e;
-        }
+  @Transactional
+  public SignUpResult create(SignUpCommand request) {
+    if (userRepository.existsByEmail(request.getEmail())) {
+      throw new DuplicateUserException("이미 가입된 이메일입니다.");
+    }
+    if (userRepository.existsByNickName(request.getNickName())) {
+      throw new DuplicateUserException("이미 사용중인 닉네임입니다.");
     }
 
-    public GetUserInfoResult getUserInfo(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("user.notfound"));
-        return GetUserInfoResult.from(user);
+    UUID keycloakId = identityProvider.createUser(request.getEmail(), request.getPassword());
+
+    try {
+      User user = request.toUser(keycloakId);
+      userRepository.save(user);
+      return SignUpResult.from(keycloakId);
+    } catch (Exception e) {
+      log.error("DB 저장 실패로 Keycloak 유저 롤백 - keycloakId: {}", keycloakId);
+      identityProvider.deleteUser(keycloakId);
+      throw e;
     }
+  }
+
+  public GetUserInfoResult getUserInfo(UUID userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("user.notfound"));
+    return GetUserInfoResult.from(user);
+  }
 }

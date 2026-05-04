@@ -11,13 +11,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final IdentityProvider identityProvider;
+  private final IdentityProvider identityProvider;
 
-    public LoginResult login(LoginCommand command) {
-        TokenResult tokenResult = identityProvider.login(
-                command.email(),
-                command.password()
-        );
-        return LoginResult.from(tokenResult);
-    }
+  public LoginResult login(LoginCommand command) {
+    TokenResult tokenResult = identityProvider.login(command.email(), command.password());
+    return LoginResult.from(tokenResult);
+  }
 }

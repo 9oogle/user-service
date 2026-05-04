@@ -8,28 +8,26 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-
 @Getter
 @ToString
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Email {
-    @Column(nullable = false, unique = true)
-    private String email;
+  @Column(nullable = false, unique = true)
+  private String email;
 
-    private Email(String email){
-        validate(email);
-        this.email = email;
+  private Email(String email) {
+    validate(email);
+    this.email = email;
+  }
+
+  public static Email of(String email) {
+    return new Email(email);
+  }
+
+  private void validate(String email) {
+    if (email == null || !email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+      throw new InvalidEmailException(email);
     }
-
-    public static Email of(String email){
-        return new Email(email);
-    }
-
-    private void validate(String email){
-        if(email == null || !email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")){
-            throw new InvalidEmailException(email);
-        }
-    }
-
+  }
 }
