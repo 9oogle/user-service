@@ -1,9 +1,11 @@
 package com.goggles.user_service.user.application.service;
 
+import com.goggles.user_service.user.application.dto.GetUserInfoResult;
 import com.goggles.user_service.user.application.dto.SignUpCommand;
 import com.goggles.user_service.user.application.dto.SignUpResult;
 import com.goggles.user_service.user.domain.entity.User;
 import com.goggles.user_service.user.domain.exception.DuplicateUserException;
+import com.goggles.user_service.user.domain.exception.UserNotFoundException;
 import com.goggles.user_service.user.domain.repository.UserRepository;
 import com.goggles.user_service.user.domain.service.IdentityProvider;
 import lombok.RequiredArgsConstructor;
@@ -41,5 +43,11 @@ public class UserService {
             identityProvider.deleteUser(keycloakId);
             throw e;
         }
+    }
+
+    public GetUserInfoResult getUserInfo(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("user.notfound"));
+        return GetUserInfoResult.from(user);
     }
 }

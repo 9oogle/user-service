@@ -1,6 +1,7 @@
 package com.goggles.user_service.user.domain.repository;
 
 import com.goggles.user_service.user.domain.entity.User;
+import com.goggles.user_service.user.domain.entity.UserId;
 
 import java.util.Optional;
 import java.util.UUID;
