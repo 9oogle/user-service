@@ -1,19 +1,28 @@
 package com.goggles.user_service.user.infrastructure.keycloak;
 
+import com.goggles.user_service.user.domain.entity.TokenResult;
 import com.goggles.user_service.user.domain.exception.DuplicateUserException;
 import com.goggles.user_service.user.domain.exception.IdentityProviderException;
+import com.goggles.user_service.user.domain.exception.InvalidCredentialsException;
 import com.goggles.user_service.user.domain.exception.UserNotFoundException;
 import com.goggles.user_service.user.domain.service.IdentityProvider;
+import com.goggles.user_service.user.infrastructure.keycloak.config.KeycloakProperties;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -22,6 +31,51 @@ import java.util.UUID;
 public class KeycloakIdentityProvider implements IdentityProvider {
 
     private final RealmResource realmResource;
+    private final KeycloakProperties properties;
+    private final RestTemplate restTemplate;
+
+    @Override
+    public TokenResult login(String email, String password) {
+        String tokenUrl = properties.serverUrl()
+                + "/realms/" + properties.realm()
+                + "/protocol/openid-connect/token";
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", "password");
+        params.add("client_id", properties.clientId());
+        params.add("client_secret", properties.clientSecret());
+        params.add("username", email);
+        params.add("password", password);
+
+        try {
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    tokenUrl,
+                    org.springframework.http.HttpMethod.POST,
+                    new HttpEntity<>(params, headers()),
+                    new ParameterizedTypeReference<>() {
+                    }
+            );
+            Map<String, Object> body = response.getBody();
+            if (body != null) {
+                return new TokenResult(
+                        (String) body.get("access_token"),
+                        (String) body.get("refresh_token")
+                );
+            }
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                throw new InvalidCredentialsException();
+            }
+            throw new IdentityProviderException("로그인 실패: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private HttpHeaders headers() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        return headers;
+    }
 
     @Override
     public UUID createUser(String email, String password) {
