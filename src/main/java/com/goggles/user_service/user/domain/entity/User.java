@@ -91,6 +91,10 @@ public class User extends BaseTime {
     }
   }
 
+  public void validateAccess(RoleCheck roleCheck) {
+    checkMine(roleCheck);
+  }
+
   public void changeRole(Role role, RoleCheck roleCheck) {
     checkMasterOnly(roleCheck);
 
