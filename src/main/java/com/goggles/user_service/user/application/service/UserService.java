@@ -1,6 +1,7 @@
 package com.goggles.user_service.user.application.service;
 
 import com.goggles.user_service.common.domain.service.RoleCheck;
+import com.goggles.user_service.common.domain.service.RoleCheckFactory;
 import com.goggles.user_service.user.application.dto.GetMyInfoResult;
 import com.goggles.user_service.user.application.dto.GetUserInfoResult;
 import com.goggles.user_service.user.application.dto.SignUpCommand;
@@ -11,7 +12,6 @@ import com.goggles.user_service.user.domain.exception.DuplicateUserException;
 import com.goggles.user_service.user.domain.exception.UserNotFoundException;
 import com.goggles.user_service.user.domain.repository.UserRepository;
 import com.goggles.user_service.user.domain.service.IdentityProvider;
-import com.goggles.user_service.common.domain.service.RoleCheckFactory;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
