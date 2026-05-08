@@ -1,8 +1,12 @@
 package com.goggles.user_service.user.application.service;
 
+import com.goggles.user_service.common.domain.service.RoleCheck;
+import com.goggles.user_service.common.domain.service.RoleCheckFactory;
+import com.goggles.user_service.user.application.dto.GetMyInfoResult;
 import com.goggles.user_service.user.application.dto.GetUserInfoResult;
 import com.goggles.user_service.user.application.dto.SignUpCommand;
 import com.goggles.user_service.user.application.dto.SignUpResult;
+import com.goggles.user_service.user.domain.entity.Role;
 import com.goggles.user_service.user.domain.entity.User;
 import com.goggles.user_service.user.domain.exception.DuplicateUserException;
 import com.goggles.user_service.user.domain.exception.UserNotFoundException;
@@ -21,6 +25,7 @@ public class UserService {
 
   private final UserRepository userRepository;
   private final IdentityProvider identityProvider;
+  private final RoleCheckFactory roleCheckFactory;
 
   @Transactional
   public SignUpResult create(SignUpCommand request) {
@@ -44,11 +49,23 @@ public class UserService {
     }
   }
 
+  @Transactional(readOnly = true)
   public GetUserInfoResult getUserInfo(UUID userId) {
     User user =
         userRepository
             .findById(userId)
             .orElseThrow(() -> new UserNotFoundException("user.notfound"));
     return GetUserInfoResult.from(user);
+  }
+
+  @Transactional(readOnly = true)
+  public GetMyInfoResult getMyInfo(UUID requesterId, Role requesterRole) {
+    User user =
+        userRepository
+            .findById(requesterId)
+            .orElseThrow(() -> new UserNotFoundException("user.notfound"));
+    RoleCheck roleCheck = roleCheckFactory.create(requesterId, requesterRole, requesterId);
+    user.validateAccess(roleCheck);
+    return GetMyInfoResult.from(user);
   }
 }
