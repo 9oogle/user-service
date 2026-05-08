@@ -4,6 +4,7 @@ import com.goggles.common.domain.BaseTime;
 import com.goggles.common.exception.BadRequestException;
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.user_service.common.domain.service.RoleCheck;
+import com.goggles.user_service.instructor.domain.exception.InstructorForbiddenException;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -93,6 +94,12 @@ public class User extends BaseTime {
 
   public void validateAccess(RoleCheck roleCheck) {
     checkMine(roleCheck);
+  }
+
+  public void validateCanApplyAsInstructor() {
+    if (this.role != Role.STUDENT) {
+      throw new InstructorForbiddenException("instructor.exception.apply.forbidden");
+    }
   }
 
   public void changeRole(Role role, RoleCheck roleCheck) {
