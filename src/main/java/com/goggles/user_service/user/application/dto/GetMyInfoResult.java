@@ -31,9 +31,15 @@ public record GetMyInfoResult(
         user.getPhoneNumber().getPhoneNumber(),
         user.getConsent().isMarketing(),
         user.getConsent().isEmail(),
-        user.getProfile().getInterests(),
-        user.getProfile().getJobs(),
-        user.getProfile().getEducations(),
-        user.getProfile().getMajors());
+        user.getProfile().getInterests() == null
+            ? List.of()
+            : List.copyOf(user.getProfile().getInterests()),
+        user.getProfile().getJobs() == null ? List.of() : List.copyOf(user.getProfile().getJobs()),
+        user.getProfile().getEducations() == null
+            ? List.of()
+            : List.copyOf(user.getProfile().getEducations()),
+        user.getProfile().getMajors() == null
+            ? List.of()
+            : List.copyOf(user.getProfile().getMajors()));
   }
 }

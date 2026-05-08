@@ -5,11 +5,15 @@ import com.goggles.common.exception.BadRequestException;
 import com.goggles.common.exception.ForbiddenException;
 import com.goggles.user_service.common.domain.service.RoleCheck;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
-import lombok.*;
 
 @Getter
 @Entity
@@ -93,6 +97,12 @@ public class User extends BaseTime {
 
   public void validateAccess(RoleCheck roleCheck) {
     checkMine(roleCheck);
+  }
+
+  public void validateCanApplyAsInstructor() {
+    if (this.role != Role.STUDENT) {
+      throw new ForbiddenException("instructor.exception.apply.forbidden");
+    }
   }
 
   public void changeRole(Role role, RoleCheck roleCheck) {
