@@ -1,14 +1,20 @@
 package com.goggles.user_service.instructor.presentation.controller;
 
+import com.goggles.common.pagination.CommonPageRequest;
+import com.goggles.common.pagination.CommonPageResponse;
 import com.goggles.user_service.instructor.application.dto.InstructorApproveCommand;
+import com.goggles.user_service.instructor.application.dto.InstructorListResult;
 import com.goggles.user_service.instructor.application.service.InstructorService;
+import com.goggles.user_service.instructor.domain.entity.InstructorStatus;
 import com.goggles.user_service.instructor.presentation.dto.InstructorApplyRequest;
 import com.goggles.user_service.instructor.presentation.dto.InstructorApplyResponse;
 import com.goggles.user_service.instructor.presentation.dto.InstructorApproveResponse;
+import com.goggles.user_service.instructor.presentation.dto.InstructorListResponse;
 import com.goggles.user_service.user.domain.entity.Role;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,5 +53,12 @@ public class InstructorController {
     return InstructorApproveResponse.from(
         instructorService.reject(
             new InstructorApproveCommand(instructorId, requesterId, requesterRole)));
+  }
+
+  @GetMapping
+  public CommonPageResponse<InstructorListResponse> getInstructors(
+      @RequestParam(required = false) InstructorStatus status, CommonPageRequest pageRequest) {
+    Page<InstructorListResult> results = instructorService.getInstructors(status, pageRequest);
+    return CommonPageResponse.of(results, InstructorListResponse::from);
   }
 }

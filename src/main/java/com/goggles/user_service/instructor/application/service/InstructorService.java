@@ -1,12 +1,11 @@
 package com.goggles.user_service.instructor.application.service;
 
+import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.user_service.common.domain.service.RoleCheck;
 import com.goggles.user_service.common.domain.service.RoleCheckFactory;
-import com.goggles.user_service.instructor.application.dto.InstructorApplyCommand;
-import com.goggles.user_service.instructor.application.dto.InstructorApplyResult;
-import com.goggles.user_service.instructor.application.dto.InstructorApproveCommand;
-import com.goggles.user_service.instructor.application.dto.InstructorApproveResult;
+import com.goggles.user_service.instructor.application.dto.*;
 import com.goggles.user_service.instructor.domain.entity.Instructor;
+import com.goggles.user_service.instructor.domain.entity.InstructorStatus;
 import com.goggles.user_service.instructor.domain.exception.DuplicateInstructorException;
 import com.goggles.user_service.instructor.domain.exception.InstructorNotFoundException;
 import com.goggles.user_service.instructor.domain.repository.InstructorRepository;
@@ -16,6 +15,8 @@ import com.goggles.user_service.user.domain.exception.UserNotFoundException;
 import com.goggles.user_service.user.domain.repository.UserRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,5 +79,16 @@ public class InstructorService {
 
     instructor.reject(roleCheck);
     return InstructorApproveResult.from(instructor);
+  }
+
+  @Transactional(readOnly = true)
+  public Page<InstructorListResult> getInstructors(
+      InstructorStatus status, CommonPageRequest pageRequest) {
+    Page<Instructor> instructors =
+        status != null
+            ? instructorRepository.findAllByStatus(status, pageRequest.toPageable(Sort.unsorted()))
+            : instructorRepository.findAll(pageRequest.toPageable(Sort.unsorted()));
+
+    return instructors.map(InstructorListResult::from);
   }
 }
