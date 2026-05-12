@@ -1,5 +1,6 @@
 package com.goggles.user_service.instructor.application.service;
 
+import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.user_service.common.domain.service.RoleCheck;
 import com.goggles.user_service.common.domain.service.RoleCheckFactory;
@@ -83,7 +84,14 @@ public class InstructorService {
 
   @Transactional(readOnly = true)
   public Page<InstructorListResult> getInstructors(
-      InstructorStatus status, CommonPageRequest pageRequest) {
+      InstructorStatus status,
+      CommonPageRequest pageRequest,
+      UUID requesterId,
+      Role requesterRole) {
+    RoleCheck roleCheck = roleCheckFactory.create(requesterId, requesterRole, null);
+    if (!roleCheck.hasRole(Role.MASTER)) {
+      throw new ForbiddenException("instructor.exception.list.forbidden");
+    }
     Page<Instructor> instructors =
         status != null
             ? instructorRepository.findAllByStatus(status, pageRequest.toPageable(Sort.unsorted()))
