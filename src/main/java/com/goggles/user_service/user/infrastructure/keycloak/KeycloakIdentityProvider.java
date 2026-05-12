@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -72,7 +73,7 @@ public class KeycloakIdentityProvider implements IdentityProvider {
   }
 
   @Override
-  public UUID createUser(String email, String password) {
+  public UUID createUser(String email, String password, String role) {
     UserRepresentation user = new UserRepresentation();
     user.setEnabled(true);
     user.setEmail(email);
@@ -98,10 +99,13 @@ public class KeycloakIdentityProvider implements IdentityProvider {
       }
 
       String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
+
+      assignRole(userId, role);
+
       return UUID.fromString(userId);
 
     } catch (DuplicateUserException | IdentityProviderException e) {
-      throw e; // 의도된 예외는 그대로 올림
+      throw e;
     } catch (Exception e) {
       log.error("keycloak 유저 생성 실패", e);
       throw new IdentityProviderException("user.registration.failed");
@@ -138,5 +142,15 @@ public class KeycloakIdentityProvider implements IdentityProvider {
     credential.setValue(password);
     credential.setTemporary(false);
     return credential;
+  }
+
+  private void assignRole(String userId, String roleName) {
+    try {
+      RoleRepresentation role = realmResource.roles().get(roleName).toRepresentation();
+      realmResource.users().get(userId).roles().realmLevel().add(List.of(role));
+    } catch (Exception e) {
+      log.error("Keycloak role 할당 실패 - userId: {}, role: {}", userId, roleName, e);
+      throw new IdentityProviderException("user.role.assign.failed");
+    }
   }
 }

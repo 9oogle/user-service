@@ -35,8 +35,12 @@ public class UserService {
     if (userRepository.existsByNickName(request.getNickName())) {
       throw new DuplicateUserException("이미 사용중인 닉네임입니다.");
     }
+    if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+      throw new DuplicateUserException("이미 사용중인 전화번호입니다.");
+    }
 
-    UUID keycloakId = identityProvider.createUser(request.getEmail(), request.getPassword());
+    UUID keycloakId =
+        identityProvider.createUser(request.getEmail(), request.getPassword(), "STUDENT");
 
     try {
       User user = request.toUser(keycloakId);
