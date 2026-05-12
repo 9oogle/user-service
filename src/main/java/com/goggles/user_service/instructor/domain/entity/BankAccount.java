@@ -17,16 +17,16 @@ import lombok.ToString;
 public class BankAccount {
 
   @ToString.Include
-  @Column(name = "bank_name", nullable = false)
+  @Column(name = "bank_name")
   @Enumerated(EnumType.STRING)
   private Bank bankName;
 
   @ToString.Exclude
-  @Column(name = "account_number", nullable = false)
+  @Column(name = "account_number")
   private String accountNumber;
 
   @ToString.Exclude
-  @Column(name = "account_holder", nullable = false)
+  @Column(name = "account_holder")
   private String accountHolder;
 
   private BankAccount(Bank bankName, String accountNumber, String accountHolder) {
