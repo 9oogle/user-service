@@ -14,4 +14,6 @@ public interface UserRepository {
   Optional<User> findById(UUID id);
 
   boolean existsByNickName(String nickName);
+
+  boolean existsByPhoneNumber(String phoneNumber);
 }

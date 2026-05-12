@@ -38,4 +38,9 @@ public class JpaUserRepository implements UserRepository {
   public boolean existsByNickName(String nickName) {
     return repository.existsByNickName_NickName(nickName);
   }
+
+  @Override
+  public boolean existsByPhoneNumber(String phoneNumber) {
+    return repository.existsByPhoneNumber_PhoneNumber(phoneNumber);
+  }
 }
