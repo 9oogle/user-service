@@ -14,6 +14,7 @@ import com.goggles.user_service.user.domain.entity.Role;
 import com.goggles.user_service.user.domain.entity.User;
 import com.goggles.user_service.user.domain.exception.UserNotFoundException;
 import com.goggles.user_service.user.domain.repository.UserRepository;
+import com.goggles.user_service.user.domain.service.IdentityProvider;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ public class InstructorService {
   private final InstructorRepository instructorRepository;
   private final UserRepository userRepository;
   private final RoleCheckFactory roleCheckFactory;
+  private final IdentityProvider identityProvider;
 
   @Transactional
   public InstructorApplyResult apply(InstructorApplyCommand command) {
@@ -64,6 +66,10 @@ public class InstructorService {
 
     instructor.approve(roleCheck);
     user.changeRole(Role.INSTRUCTOR, roleCheck);
+
+    UUID userId = UUID.fromString(user.getId().getUserId());
+    identityProvider.removeRole(userId, "STUDENT");
+    identityProvider.changeRole(userId, "INSTRUCTOR");
 
     return InstructorApproveResult.from(instructor);
   }

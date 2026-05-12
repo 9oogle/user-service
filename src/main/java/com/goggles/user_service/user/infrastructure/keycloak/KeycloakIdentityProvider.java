@@ -144,6 +144,28 @@ public class KeycloakIdentityProvider implements IdentityProvider {
     return credential;
   }
 
+  @Override
+  public void changeRole(UUID userId, String roleName) {
+    try {
+      RoleRepresentation role = realmResource.roles().get(roleName).toRepresentation();
+      realmResource.users().get(userId.toString()).roles().realmLevel().add(List.of(role));
+    } catch (Exception e) {
+      log.error("Keycloak role 할당 실패 - userId: {}, role: {}", userId, roleName, e);
+      throw new IdentityProviderException("user.role.assign.failed");
+    }
+  }
+
+  @Override
+  public void removeRole(UUID userId, String roleName) {
+    try {
+      RoleRepresentation role = realmResource.roles().get(roleName).toRepresentation();
+      realmResource.users().get(userId.toString()).roles().realmLevel().remove(List.of(role));
+    } catch (Exception e) {
+      log.error("Keycloak role 제거 실패 - userId: {}, role: {}", userId, roleName, e);
+      throw new IdentityProviderException("user.role.remove.failed");
+    }
+  }
+
   private void assignRole(String userId, String roleName) {
     try {
       RoleRepresentation role = realmResource.roles().get(roleName).toRepresentation();

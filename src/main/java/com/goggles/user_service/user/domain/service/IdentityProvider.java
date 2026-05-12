@@ -12,4 +12,8 @@ public interface IdentityProvider {
   void changePassword(UUID userId, String newPassword);
 
   TokenResult login(String email, String password);
+
+  void changeRole(UUID userId, String roleName);
+
+  void removeRole(UUID userId, String roleName);
 }
