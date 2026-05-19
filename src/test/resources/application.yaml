@@ -2,9 +2,6 @@ spring:
   application:
     name: user-service
 
-  profiles:
-    active: dev
-
   config:
     import:
       - "optional:file:.env[.properties]"
@@ -17,9 +14,9 @@ spring:
         enabled: false
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:9013}/${DB_NAME:goggles}
-    username: ${DB_USERNAME:user}
-    password: ${DB_PASSWORD:1234}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:goggles}
+    username: ${DB_USERNAME:goggles}
+    password: ${DB_PASSWORD:goggles}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -42,9 +39,9 @@ keycloak:
   server-url: "http://localhost:9090"
   realm: goggles
   client-id: user-service
-  client-secret: ${KEYCLOAK_CLIENT_SECRET}
-  admin-username: ${KEYCLOAK_ADMIN_USERNAME}
-  admin-password: ${KEYCLOAK_ADMIN_PASSWORD}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:dummy-secret}
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:dummy-admin}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:dummy-password}
 
 # Eureka 비활성화
 eureka:

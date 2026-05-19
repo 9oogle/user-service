@@ -1,6 +1,8 @@
 package com.goggles.user_service.user.application.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
 
 import com.goggles.user_service.user.application.dto.SignUpCommand;
 import com.goggles.user_service.user.application.dto.SignUpResult;
@@ -8,14 +10,17 @@ import com.goggles.user_service.user.domain.entity.Gender;
 import com.goggles.user_service.user.domain.entity.Interest;
 import com.goggles.user_service.user.domain.entity.Job;
 import com.goggles.user_service.user.domain.repository.UserRepository;
+import com.goggles.user_service.user.domain.service.IdentityProvider;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @Slf4j
 @SpringBootTest
@@ -24,6 +29,8 @@ public class UserServiceIntegrationTest {
   @Autowired private UserService userService;
 
   @Autowired private UserRepository userRepository;
+
+  @MockitoBean private IdentityProvider identityProvider;
 
   private SignUpCommand buildCommand(String email, String nickName) {
     return SignUpCommand.builder()
@@ -53,6 +60,9 @@ public class UserServiceIntegrationTest {
   @Test
   @DisplayName("회원가입 정상 플로우 - Keycloak 생성 및 DB 저장 성공")
   void signUp_success() {
+    UUID fakeKeycloakId = UUID.randomUUID();
+    given(identityProvider.createUser(anyString(), anyString())).willReturn(fakeKeycloakId);
+
     SignUpCommand command = buildCommand("test@test.com", "테스터");
 
     SignUpResult result = userService.create(command);

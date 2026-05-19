@@ -1,0 +1,39 @@
+services:
+  user-service:
+    image: ${IMAGE}:${IMAGE_TAG:-latest}
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      KEYCLOAK_URL: http://keycloak:8080
+    ports:
+      - "9010:9010"
+    volumes:
+      - /home/deploy/ssl/kafka.truststore.jks:/app/ssl/kafka.truststore.jks:ro
+      - user-logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - goggles-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HTTP_PORT: 8080
+    ports:
+      - "9090:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+    restart: unless-stopped
+    networks:
+      - goggles-network
+
+volumes:
+  user-logs:
+  keycloak-data:
+
+networks:
+  goggles-network:
+    external: true
