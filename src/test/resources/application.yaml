@@ -19,6 +19,9 @@ spring:
     password: ${DB_PASSWORD:goggles}
     driver-class-name: org.postgresql.Driver
 
+  flyway:
+    enabled: false
+
   jpa:
     hibernate:
       ddl-auto: create-drop

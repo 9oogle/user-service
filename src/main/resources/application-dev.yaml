@@ -18,6 +18,10 @@ spring:
         default_schema: user_db
         hbm2ddl:
           create_namespaces: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
   security:
     oauth2:
