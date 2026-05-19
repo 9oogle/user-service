@@ -57,8 +57,12 @@ public class InstructorController {
 
   @GetMapping
   public CommonPageResponse<InstructorListResponse> getInstructors(
-      @RequestParam(required = false) InstructorStatus status, CommonPageRequest pageRequest) {
-    Page<InstructorListResult> results = instructorService.getInstructors(status, pageRequest);
+      @RequestParam(required = false) InstructorStatus status,
+      CommonPageRequest pageRequest,
+      @RequestHeader("X-User-Id") UUID requesterId,
+      @RequestHeader("X-User-Role") Role requesterRole) {
+    Page<InstructorListResult> results =
+        instructorService.getInstructors(status, pageRequest, requesterId, requesterRole);
     return CommonPageResponse.of(results, InstructorListResponse::from);
   }
 }

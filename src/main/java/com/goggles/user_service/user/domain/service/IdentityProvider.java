@@ -5,11 +5,15 @@ import java.util.UUID;
 
 public interface IdentityProvider {
 
-  UUID createUser(String email, String password);
+  UUID createUser(String email, String password, String role);
 
   void deleteUser(UUID id);
 
   void changePassword(UUID userId, String newPassword);
 
   TokenResult login(String email, String password);
+
+  void changeRole(UUID userId, String roleName);
+
+  void removeRole(UUID userId, String roleName);
 }

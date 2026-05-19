@@ -1,5 +1,6 @@
 package com.goggles.user_service.instructor.application.service;
 
+import com.goggles.common.exception.ForbiddenException;
 import com.goggles.common.pagination.CommonPageRequest;
 import com.goggles.user_service.common.domain.service.RoleCheck;
 import com.goggles.user_service.common.domain.service.RoleCheckFactory;
@@ -13,6 +14,7 @@ import com.goggles.user_service.user.domain.entity.Role;
 import com.goggles.user_service.user.domain.entity.User;
 import com.goggles.user_service.user.domain.exception.UserNotFoundException;
 import com.goggles.user_service.user.domain.repository.UserRepository;
+import com.goggles.user_service.user.domain.service.IdentityProvider;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +29,7 @@ public class InstructorService {
   private final InstructorRepository instructorRepository;
   private final UserRepository userRepository;
   private final RoleCheckFactory roleCheckFactory;
+  private final IdentityProvider identityProvider;
 
   @Transactional
   public InstructorApplyResult apply(InstructorApplyCommand command) {
@@ -64,6 +67,10 @@ public class InstructorService {
     instructor.approve(roleCheck);
     user.changeRole(Role.INSTRUCTOR, roleCheck);
 
+    UUID userId = UUID.fromString(user.getId().getUserId());
+    identityProvider.removeRole(userId, "STUDENT");
+    identityProvider.changeRole(userId, "INSTRUCTOR");
+
     return InstructorApproveResult.from(instructor);
   }
 
@@ -83,7 +90,14 @@ public class InstructorService {
 
   @Transactional(readOnly = true)
   public Page<InstructorListResult> getInstructors(
-      InstructorStatus status, CommonPageRequest pageRequest) {
+      InstructorStatus status,
+      CommonPageRequest pageRequest,
+      UUID requesterId,
+      Role requesterRole) {
+    RoleCheck roleCheck = roleCheckFactory.create(requesterId, requesterRole, null);
+    if (!roleCheck.hasRole(Role.MASTER)) {
+      throw new ForbiddenException("instructor.exception.list.forbidden");
+    }
     Page<Instructor> instructors =
         status != null
             ? instructorRepository.findAllByStatus(status, pageRequest.toPageable(Sort.unsorted()))
