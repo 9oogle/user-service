@@ -175,6 +175,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider-v2
+          service_account: ${{ vars.GCP_SA_EMAIL }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
       - name: Set compose file
         id: vars
         run: |
@@ -186,105 +196,85 @@ jobs:
             echo "compose=docker-compose.yml" >> $GITHUB_OUTPUT
           fi
 
-      - name: Copy compose file
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ vars.VM_USER }}
-          port: ${{ vars.VM_SSH_PORT }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          source: "${{ steps.vars.outputs.compose }}"
-          target: "${{ vars.APP_DIR }}/${{ vars.SERVICE_NAME }}"
+      - name: Prepare .env and deploy script
+        run: |
+          cat > /tmp/.env.new << EOF
+          IMAGE=${{ env.IMAGE }}
+          IMAGE_TAG=${{ github.sha }}
+          SPRING_DATASOURCE_URL=jdbc:postgresql://${{ secrets.DB_URL }}/user_db
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${{ secrets.VM_INTERNAL_HOST }}:9001/eureka/
+          KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_1_INTERNAL_IP }}:9092,${{ secrets.KAFKA_2_INTERNAL_IP }}:9092,${{ secrets.KAFKA_3_INTERNAL_IP }}:9092
+          TRUST_STORE_PASSWORD=${{ secrets.TRUST_STORE_PASSWORD }}
+          MONITORING_HOST=${{ secrets.MONITORING_VM_HOST }}
+          KEYCLOAK_CLIENT_SECRET=${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+          KEYCLOAK_ADMIN_USERNAME=${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
+          KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+          EOF
+
+          cat > /tmp/deploy.sh << 'SCRIPT'
+          set -e
+          APP_DIR="$1"
+          SERVICE="$2"
+          HEALTH_PORT="$3"
+          COMPOSE_FILE="$APP_DIR/$4"
+          ENV_FILE="$APP_DIR/.env"
+
+          cd $APP_DIR
+
+          PREV_TAG=$(grep '^IMAGE_TAG=' "$ENV_FILE" 2>/dev/null | cut -d= -f2)
+          echo "Previous: ${PREV_TAG:-(없음)} → New: $(grep '^IMAGE_TAG=' "$ENV_FILE.new" | cut -d= -f2)"
+
+          mv "$ENV_FILE.new" "$ENV_FILE"
+          sed -i '/^SPRING_CLOUD_CONFIG_URI=/d' "$ENV_FILE"
+
+          if [ ! -f "/home/deploy/ssl/kafka.truststore.jks" ]; then
+            echo "[SSL] ❌ /home/deploy/ssl/kafka.truststore.jks 없음"
+            exit 1
+          fi
+
+          docker compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d keycloak
+          docker compose --env-file $ENV_FILE -f $COMPOSE_FILE pull $SERVICE
+          docker compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d $SERVICE
+
+          echo "Health check 시작... (port: $HEALTH_PORT)"
+          for i in $(seq 1 8); do
+            sleep 30
+            if curl -sf "http://localhost:$HEALTH_PORT/actuator/health" > /dev/null; then
+              echo "Health check 통과 (시도 $i)"
+              exit 0
+            fi
+            echo "Health check 실패 ($i/8)"
+          done
+
+          [ -z "$PREV_TAG" ] && echo "이전 태그 없음 — 롤백 불가" && exit 1
+          echo "배포 실패 — $PREV_TAG 로 롤백..."
+          sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=$PREV_TAG|" "$ENV_FILE"
+          docker compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d $SERVICE
+          sleep 30
+          curl -sf "http://localhost:$HEALTH_PORT/actuator/health" > /dev/null && echo "롤백 성공" || echo "롤백도 실패"
+          exit 1
+          SCRIPT
+
+      - name: Copy files to VM
+        run: |
+          gcloud compute ssh ${{ vars.VM_USER }}@service-vm \
+            --zone=asia-northeast3-a \
+            --tunnel-through-iap \
+            --command="mkdir -p ${{ vars.APP_DIR }}/${{ vars.SERVICE_NAME }}"
+          gcloud compute scp /tmp/.env.new /tmp/deploy.sh ${{ steps.vars.outputs.compose }} \
+            ${{ vars.VM_USER }}@service-vm:${{ vars.APP_DIR }}/${{ vars.SERVICE_NAME }}/ \
+            --zone=asia-northeast3-a \
+            --tunnel-through-iap
 
       - name: Deploy to VM
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ vars.VM_USER }}
-          port: ${{ vars.VM_SSH_PORT }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          script: |
-            set -e
-
-            APP_DIR="${{ vars.APP_DIR }}/${{ vars.SERVICE_NAME }}"
-            SERVICE="${{ vars.SERVICE_NAME }}"
-            NEW_TAG="${{ github.sha }}"
-            export IMAGE="${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY }}/${{ vars.SERVICE_NAME }}"
-            ENV_FILE="$APP_DIR/.env"
-
-            mkdir -p $APP_DIR
-            cd $APP_DIR
-
-            # 롤백용 이전 태그 저장
-            PREV_TAG=$(grep '^IMAGE_TAG=' "$ENV_FILE" 2>/dev/null | cut -d= -f2)
-            if [ -z "$PREV_TAG" ]; then
-              echo "이전 태그 없음 — 초기 배포로 간주, 실패 시 롤백 불가"
-            fi
-            echo "Previous: ${PREV_TAG:-(없음)} → New: $NEW_TAG"
-
-            # .env 업데이트
-            upsert_env() {
-              local KEY="$1" VAL="$2"
-              if grep -q "^${KEY}=" "$ENV_FILE" 2>/dev/null; then
-                sed -i "s|^${KEY}=.*|${KEY}=${VAL}|" "$ENV_FILE"
-              else
-                echo "${KEY}=${VAL}" >> "$ENV_FILE"
-              fi
-            }
-
-            upsert_env IMAGE_TAG "$NEW_TAG"
-            upsert_env SPRING_DATASOURCE_URL "jdbc:postgresql://${{ secrets.DB_URL }}/user_db"
-            upsert_env DB_USERNAME "${{ secrets.DB_USERNAME }}"
-            upsert_env DB_PASSWORD "${{ secrets.DB_PASSWORD }}"
-            upsert_env EUREKA_CLIENT_SERVICEURL_DEFAULTZONE "http://${{ secrets.VM_INTERNAL_HOST }}:9001/eureka/"
-            upsert_env KAFKA_BOOTSTRAP_SERVERS "${{ secrets.KAFKA_1_INTERNAL_IP }}:9092,${{ secrets.KAFKA_2_INTERNAL_IP }}:9092,${{ secrets.KAFKA_3_INTERNAL_IP }}:9092"
-            upsert_env TRUST_STORE_PASSWORD "${{ secrets.TRUST_STORE_PASSWORD }}"
-            upsert_env MONITORING_HOST "${{ secrets.MONITORING_VM_HOST }}"
-            upsert_env KEYCLOAK_CLIENT_SECRET "${{ secrets.KEYCLOAK_CLIENT_SECRET }}"
-            upsert_env KEYCLOAK_ADMIN_USERNAME "${{ secrets.KEYCLOAK_ADMIN_USERNAME }}"
-            upsert_env KEYCLOAK_ADMIN_PASSWORD "${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}"
-
-            # config server는 Eureka 디스커버리로 찾으므로 URI 직접 지정 불필요
-            sed -i '/^SPRING_CLOUD_CONFIG_URI=/d' "$ENV_FILE" 2>/dev/null || true
-
-            # SSL truststore는 VM 공용 경로에 직접 배치 (/home/deploy/ssl/kafka.truststore.jks)
-            if [ ! -f "/home/deploy/ssl/kafka.truststore.jks" ]; then
-              echo "[SSL] ❌ /home/deploy/ssl/kafka.truststore.jks 파일 없음 — VM에 직접 배치 필요"
-              exit 1
-            fi
-
-            # 새 이미지 pull & 재시작
-            COMPOSE_FILE="${{ steps.vars.outputs.compose }}"
-
-            # Keycloak 시작 (이미 실행 중이면 무시)
-            docker compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d keycloak
-
-            docker compose --env-file $ENV_FILE -f $COMPOSE_FILE pull $SERVICE
-            docker compose --env-file $ENV_FILE -f $COMPOSE_FILE up -d $SERVICE
-
-            # Health check (30초 간격, 최대 8회)
-            echo "Health check 시작... (port: ${{ vars.HEALTH_CHECK_PORT }})"
-            for i in $(seq 1 8); do
-              sleep 30
-              if curl -sf "http://localhost:${{ vars.HEALTH_CHECK_PORT }}/actuator/health" > /dev/null; then
-                echo "Health check 통과 (시도 $i)"
-                exit 0
-              fi
-              echo "Health check 실패 ($i/8)"
-            done
-
-            # 롤백
-            if [ -z "$PREV_TAG" ]; then
-              echo "이전 태그 없음 — 롤백 불가, 수동 복구 필요"
-              exit 1
-            fi
-            echo "배포 실패 — $PREV_TAG 로 롤백..."
-            sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=$PREV_TAG|" "$ENV_FILE"
-            docker compose -f $COMPOSE_FILE up -d $SERVICE
-            sleep 30
-            if curl -sf "http://localhost:${{ vars.HEALTH_CHECK_PORT }}/actuator/health" > /dev/null; then
-              echo "롤백 성공"
-            else
-              echo "롤백도 실패"
-            fi
-            exit 1
+        run: |
+          gcloud compute ssh ${{ vars.VM_USER }}@service-vm \
+            --zone=asia-northeast3-a \
+            --tunnel-through-iap \
+            --command="bash ${{ vars.APP_DIR }}/${{ vars.SERVICE_NAME }}/deploy.sh \
+              '${{ vars.APP_DIR }}/${{ vars.SERVICE_NAME }}' \
+              '${{ vars.SERVICE_NAME }}' \
+              '${{ vars.HEALTH_CHECK_PORT }}' \
+              '${{ steps.vars.outputs.compose }}'"
