@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public interface IdentityProvider {
 
-  UUID createUser(String email, String password);
+  UUID createUser(String name, String email, String password);
 
   void deleteUser(UUID id);
 

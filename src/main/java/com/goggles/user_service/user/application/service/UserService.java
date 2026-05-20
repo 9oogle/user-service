@@ -36,7 +36,8 @@ public class UserService {
       throw new DuplicateUserException("이미 사용중인 닉네임입니다.");
     }
 
-    UUID keycloakId = identityProvider.createUser(request.getEmail(), request.getPassword());
+    UUID keycloakId = identityProvider.createUser(request.getName(), request.getEmail(),
+            request.getPassword());
 
     try {
       User user = request.toUser(keycloakId);

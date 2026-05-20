@@ -72,12 +72,14 @@ public class KeycloakIdentityProvider implements IdentityProvider {
   }
 
   @Override
-  public UUID createUser(String email, String password) {
+  public UUID createUser(String name, String email, String password) {
     UserRepresentation user = new UserRepresentation();
     user.setEnabled(true);
     user.setEmail(email);
     user.setEmailVerified(true);
     user.setUsername(email);
+    user.setFirstName(email);
+    user.setLastName(name);
     user.setRequiredActions(List.of());
     CredentialRepresentation credential = getCredential(password);
     user.setCredentials(List.of(credential));

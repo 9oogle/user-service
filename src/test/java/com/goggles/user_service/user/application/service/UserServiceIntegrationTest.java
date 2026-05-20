@@ -61,7 +61,7 @@ public class UserServiceIntegrationTest {
   @DisplayName("회원가입 정상 플로우 - Keycloak 생성 및 DB 저장 성공")
   void signUp_success() {
     UUID fakeKeycloakId = UUID.randomUUID();
-    given(identityProvider.createUser(anyString(), anyString())).willReturn(fakeKeycloakId);
+    given(identityProvider.createUser(anyString(), anyString(), anyString())).willReturn(fakeKeycloakId);
 
     SignUpCommand command = buildCommand("test@test.com", "테스터");
 
